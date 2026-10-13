@@ -1,0 +1,41 @@
+name: Publish Radio Studio 0.3.1
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-radio-0.3.1.yml'
+      - 'releases/**'
+      - 'docs/release-notes-0.3.1.md'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: publish-radio-0.3.1
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Fetch package and verify checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          for asset in FH2-Radio-Studio-0.3.1.zip SHA256SUMS.txt; do
+            blob=$(gh api "repos/$GH_REPO/contents/releases/$asset?ref=$GITHUB_SHA" --jq '.sha')
+            gh api "repos/$GH_REPO/git/blobs/$blob" --jq '.content' | base64 --decode > "$asset"
+          done
+          sha256sum --check SHA256SUMS.txt
+          gh api "repos/$GH_REPO/contents/docs/release-notes-0.3.1.md?ref=$GITHUB_SHA" --jq '.content' | base64 --decode > notes.md
+      - name: Publish release
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view v0.3.1 --repo "$GH_REPO" >/dev/null 2>&1; then
+            echo 'Release already exists; preserving its assets.'
+            exit 0
+          fi
+          gh release create v0.3.1 FH2-Radio-Studio-0.3.1.zip SHA256SUMS.txt --repo "$GH_REPO" --target "$GITHUB_SHA" --title 'FH2 Radio Studio 0.3.1' --notes-file notes.md --latest

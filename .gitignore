@@ -1,0 +1,6 @@
+source/tests/*
+!source/tests/Test-Studio.ps1
+!source/tests/Test-MultipleStations.ps1
+!source/tests/Test-Migration.ps1
+source/FH2RadioStudio.exe
+*.fh2radio.json

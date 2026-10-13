@@ -1,0 +1,6 @@
+tests/*
+!tests/Test-Studio.ps1
+*.zip
+*.fh2radio.json
+FH2RadioStudio.exe
+tools/bin/*.exe
